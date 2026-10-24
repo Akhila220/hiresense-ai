@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head th:replace="~{layout/base :: head('ATS Diagnostic Report')}"></head>
+<body>
+
+    <div th:replace="~{layout/base :: navbar}"></div>
+    <div th:replace="~{layout/base :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <!-- Header Actions -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1 small">
+                            <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/resumes}" class="text-decoration-none">Resumes</a></li>
+                            <li class="breadcrumb-item active" aria-current="page" th:text="${resume.originalFileName}">resume.pdf</li>
+                        </ol>
+                    </nav>
+                    <h2 class="fw-bold mb-0">ATS Diagnostic & Evaluation Report</h2>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/jobs/match}" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-bullseye me-1"></i> Match Against Jobs
+                    </a>
+                    <form th:action="@{'/resumes/' + ${resume.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this resume analysis record?');">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ATS Score Overview Banner -->
+            <div class="card p-4 border-0 shadow-sm mb-4 bg-white">
+                <div class="row align-items-center gy-4">
+                    <div class="col-md-3 text-center border-end-md">
+                        <div class="score-circle mb-2"
+                             th:classappend="${breakdown.overallScore >= 80 ? 'score-excellent' : (breakdown.overallScore >= 65 ? 'score-good' : (breakdown.overallScore >= 50 ? 'score-fair' : 'score-low'))}">
+                            <span class="fs-1 lh-1" th:text="${breakdown.overallScore}">82</span>
+                            <small class="text-white-50">Score / 100</small>
+                        </div>
+                        <span class="badge px-3 py-2 fw-semibold"
+                              th:classappend="${breakdown.overallScore >= 80 ? 'bg-success-subtle text-success border border-success-subtle' : (breakdown.overallScore >= 65 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle')}"
+                              th:text="${breakdown.scoreGrade}">Strong Match</span>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <h4 class="fw-bold mb-0" th:text="${resume.originalFileName}">My_Resume.pdf</h4>
+                            <span class="badge bg-light text-muted border small" th:text="${(resume.fileSize / 1024) + ' KB'}">120 KB</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small" th:if="${analysis.isAiEnhanced}">
+                                <i class="bi bi-stars"></i> Gemini AI Advisory Enhanced
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-3" th:text="${breakdown.scoreSummary}">Summary statement</p>
+
+                        <!-- Score Breakdown Meters -->
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="bg-light p-2 rounded">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Sections</span>
+                                        <span class="fw-bold text-dark" th:text="${breakdown.sectionScore + '/25'}"></span>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-success" th:style="'width: ' + (${breakdown.sectionScore} * 4) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="bg-light p-2 rounded">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Skills Variety</span>
+                                        <span class="fw-bold text-dark" th:text="${breakdown.skillsScore + '/35'}"></span>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-primary" th:style="'width: ' + ((${breakdown.skillsScore} * 100) / 35) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="bg-light p-2 rounded">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Action Verbs</span>
+                                        <span class="fw-bold text-dark" th:text="${breakdown.impactScore + '/25'}"></span>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-warning" th:style="'width: ' + (${breakdown.impactScore} * 4) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="bg-light p-2 rounded">
+                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                        <span>Formatting</span>
+                                        <span class="fw-bold text-dark" th:text="${breakdown.formattingScore + '/15'}"></span>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-info" th:style="'width: ' + ((${breakdown.formattingScore} * 100) / 15) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section & Skills Grid -->
+            <div class="row g-4 mb-4">
+                <!-- Detected Sections -->
+                <div class="col-lg-6">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-layout-text-window-reverse text-primary me-2"></i> Section Analysis</h5>
+                        <div class="list-group list-group-flush mb-3">
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2" th:each="secName : ${breakdown.detectedSections}">
+                                <span class="small fw-semibold"><i class="bi bi-check-circle-fill text-success me-2"></i> <span th:text="${secName}">Section</span></span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Present</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extracted Skills -->
+                <div class="col-lg-6">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-code-slash text-primary me-2"></i> Extracted Skills</h5>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" th:text="${breakdown.extractedSkills.size() + ' Identified'}">0 Identified</span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-1">
+                            <span class="badge-skill" th:each="skill : ${breakdown.extractedSkills}" th:text="${skill}">Skill</span>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-light rounded small text-muted">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>
+                            Our deterministic taxonomy categorizes skills across Languages, Frameworks, Relational & NoSQL Databases, Cloud Infrastructure, and Modern Practices.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strengths & Suggestions -->
+            <div class="row g-4 mb-4">
+                <!-- Strengths -->
+                <div class="col-lg-6">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <h5 class="fw-bold text-success mb-3"><i class="bi bi-hand-thumbs-up-fill me-2"></i> Identified Strengths</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="d-flex align-items-start mb-2" th:each="str : ${breakdown.strengths}">
+                                <i class="bi bi-check2 text-success me-2 mt-1 fs-5"></i>
+                                <span class="small text-dark" th:text="${str}">Strength point</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Actionable Suggestions -->
+                <div class="col-lg-6">
+                    <div class="card h-100 p-4 border-0 shadow-sm">
+                        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-lightning-charge-fill me-2"></i> High-Impact Recommendations</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="d-flex align-items-start mb-2" th:each="sug : ${breakdown.suggestions}">
+                                <i class="bi bi-arrow-right-circle text-primary me-2 mt-1 fs-5"></i>
+                                <span class="small text-dark" th:text="${sug}">Actionable suggestion</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matched Job Roles for This Analysis -->
+            <div class="card p-4 border-0 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-briefcase-fill text-primary me-2"></i> Top Compatible Jobs</h5>
+                    <a th:href="@{/jobs/match}" class="btn btn-sm btn-outline-primary">View Full Match Matrix</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Role</th>
+                                <th>Company & Location</th>
+                                <th>Match Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="res : ${matchResults}">
+                                <td>
+                                    <a th:href="@{'/jobs/' + ${res.job.id}}" class="fw-bold text-dark text-decoration-none" th:text="${res.job.title}">Senior Engineer</a>
+                                    <div class="small text-muted" th:text="${res.job.employmentType + ' &bull; ' + res.job.experienceLevel}">Type &bull; Exp</div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark" th:text="${res.job.company}">Company</span>
+                                    <div class="small text-muted" th:text="${res.job.location}">Location</div>
+                                </td>
+                                <td>
+                                    <span class="badge px-3 py-2 fw-bold"
+                                          th:classappend="${res.matchPercentage >= 75 ? 'bg-success-subtle text-success border border-success-subtle' : (res.matchPercentage >= 55 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle')}"
+                                          th:text="${res.matchPercentage + '%'}">
+                                        80%
+                                    </span>
+                                </td>
+                                <td>
+                                    <a th:href="@{'/jobs/' + ${res.job.id}}" class="btn btn-sm btn-primary">
+                                        Inspect Fit <i class="bi bi-chevron-right ms-1"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Official Disclaimer Notice -->
+            <div class="alert alert-light border small text-muted d-flex align-items-center">
+                <i class="bi bi-shield-exclamation text-secondary fs-4 me-3"></i>
+                <div>
+                    <strong>Advisory Estimation Notice:</strong>
+                    HireSense AI calculates scores using algorithmic heuristics reflecting standard applicant tracking system criteria. Scores are intended to highlight actionable areas for refinement and do not represent a guarantee of employer interviews or employment offers.
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{layout/base :: footer}"></div>
+</body>
+</html>

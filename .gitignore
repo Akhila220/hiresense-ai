@@ -1,0 +1,35 @@
+# Compiled class file
+target/
+*.class
+
+# Log file
+*.log
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual environment / secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Uploaded Resumes and storage
+uploads/
+storage/
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head th:replace="~{layout/base :: head(${job.title})}"></head>
+<body>
+
+    <div th:replace="~{layout/base :: navbar}"></div>
+    <div th:replace="~{layout/base :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <!-- Breadcrumb & Header -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2 small">
+                    <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/jobs}" class="text-decoration-none">Jobs</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${job.title}">Job Title</li>
+                </ol>
+            </nav>
+
+            <div class="card p-4 border-0 shadow-sm mb-4 bg-white">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                    <div>
+                        <span class="badge bg-light text-secondary border small mb-2" th:if="${job.isSample}">
+                            <i class="bi bi-info-circle me-1"></i> Sample Role (Demonstration Data)
+                        </span>
+                        <h2 class="fw-bold mb-1" th:text="${job.title}">Senior Software Engineer</h2>
+                        <h5 class="text-primary fw-semibold mb-3">
+                            <span th:text="${job.company}">Company Name</span> &bull;
+                            <span class="text-muted fw-normal" th:text="${job.location}">Location</span>
+                        </h5>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" th:text="${job.employmentType}">Full-Time</span>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2" th:text="${job.experienceLevel}">Mid Level</span>
+                            <span class="badge bg-light text-dark border px-3 py-2" th:if="${job.salaryRange != null}" th:text="${job.salaryRange}">Salary</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <form th:action="@{'/jobs/' + ${job.id} + '/save'}" method="post">
+                            <button type="submit" class="btn px-3"
+                                    th:classappend="${isSaved} ? 'btn-success' : 'btn-outline-primary'">
+                                <i class="bi" th:classappend="${isSaved} ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'"></i>
+                                <span th:text="${isSaved} ? 'Saved in Bookmarks' : 'Save Job'">Save Job</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANDIDATE MATCH WIDGET -->
+            <div class="card p-4 border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bullseye text-primary me-2"></i> Your Profile Fit Diagnostic</h5>
+                    <span class="badge bg-light text-muted border small" th:if="${hasResume}">Evaluated against your latest uploaded resume</span>
+                </div>
+
+                <!-- If user has NO resume -->
+                <div th:if="${!hasResume}" class="text-center py-3">
+                    <p class="text-muted small mb-2">Upload your resume to see your exact skill match percentage and gap recommendations for this role.</p>
+                    <a th:href="@{/resumes/upload}" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Resume to Match
+                    </a>
+                </div>
+
+                <!-- If user HAS resume match -->
+                <div th:if="${hasResume && match != null}">
+                    <div class="row align-items-center gy-3 mb-3">
+                        <div class="col-md-3 text-center">
+                            <div class="score-circle mb-2" style="width: 100px; height: 100px;"
+                                 th:classappend="${match.matchPercentage >= 75 ? 'score-excellent' : (match.matchPercentage >= 55 ? 'score-good' : 'score-fair')}">
+                                <span class="fs-2 lh-1" th:text="${match.matchPercentage + '%'}">78%</span>
+                                <small class="text-white-50" style="font-size: 0.75rem;">Match Score</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9">
+                            <!-- Matched Skills -->
+                            <div class="mb-2">
+                                <span class="small fw-bold text-success d-block mb-1">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Skills Found in Your Resume:
+                                </span>
+                                <div class="d-flex flex-wrap gap-1" th:if="${!match.matchedSkills.isEmpty()}">
+                                    <span class="badge-skill badge-matched" th:each="ms : ${match.matchedSkills}" th:text="${ms}">Java</span>
+                                </div>
+                                <span class="text-muted small" th:if="${match.matchedSkills.isEmpty()}">None detected yet.</span>
+                            </div>
+
+                            <!-- Missing Skills -->
+                            <div class="mb-2">
+                                <span class="small fw-bold text-warning d-block mb-1">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Missing Role Requirements:
+                                </span>
+                                <div class="d-flex flex-wrap gap-1" th:if="${!match.missingSkills.isEmpty()}">
+                                    <span class="badge-skill badge-missing" th:each="mis : ${match.missingSkills}" th:text="${mis}">Docker</span>
+                                </div>
+                                <span class="text-success small" th:if="${match.missingSkills.isEmpty()}">All required skills detected!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actionable Recommendations -->
+                    <div class="bg-white p-3 rounded border small" th:if="${!match.recommendations.isEmpty()}">
+                        <strong class="text-primary d-block mb-1"><i class="bi bi-lightbulb-fill text-warning me-1"></i> Recommendations to Bridge the Gap:</strong>
+                        <ul class="mb-0 ps-3">
+                            <li th:each="rec : ${match.recommendations}" th:text="${rec}">Recommendation text</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Details Grid -->
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card p-4 border-0 shadow-sm bg-white mb-4">
+                        <h5 class="fw-bold mb-3">Role Overview & Responsibilities</h5>
+                        <div class="text-dark small lh-lg" style="white-space: pre-line;" th:text="${job.description}">
+                            Detailed job description...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card p-4 border-0 shadow-sm bg-white mb-4">
+                        <h5 class="fw-bold mb-3">Required Technical Stack</h5>
+                        <div class="d-flex flex-wrap gap-1 mb-4">
+                            <span class="badge-skill" th:each="s : ${#strings.arraySplit(job.requiredSkills, ',')}" th:text="${#strings.trim(s)}">Skill</span>
+                        </div>
+
+                        <h5 class="fw-bold mb-3" th:if="${job.preferredSkills != null and !job.preferredSkills.isEmpty()}">Preferred / Nice-To-Have</h5>
+                        <div class="d-flex flex-wrap gap-1 mb-3" th:if="${job.preferredSkills != null and !job.preferredSkills.isEmpty()}">
+                            <span class="badge-skill bg-light text-muted border" th:each="ps : ${#strings.arraySplit(job.preferredSkills, ',')}" th:text="${#strings.trim(ps)}">Preferred Skill</span>
+                        </div>
+
+                        <div class="border-top pt-3 text-muted small">
+                            <p class="mb-1"><i class="bi bi-calendar-event me-2"></i> Listed: <span th:text="${#temporals.format(job.createdAt, 'dd MMM yyyy')}">Date</span></p>
+                            <p class="mb-0"><i class="bi bi-building me-2"></i> Role ID: #<span th:text="${job.id}">1</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{layout/base :: footer}"></div>
+</body>
+</html>

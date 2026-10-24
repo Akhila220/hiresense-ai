@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+
+<!-- Reusable Head Fragment -->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' - HireSense AI' : 'HireSense AI - Intelligent Resume Analyzer & Job Matcher'}">HireSense AI</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Reusable Navbar Fragment -->
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/}">
+                <i class="bi bi-briefcase-fill text-primary fs-4"></i>
+                <span class="brand-gradient">HireSense AI</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                    aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/resumes}"><i class="bi bi-file-earmark-person me-1"></i> Resumes</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/jobs}"><i class="bi bi-search me-1"></i> Job Catalog</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/jobs/saved}"><i class="bi bi-bookmark-check me-1"></i> Saved Jobs</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/jobs/match}"><i class="bi bi-bullseye me-1"></i> Match Engine</a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav align-items-center gap-2">
+                    <!-- Unauthenticated Users -->
+                    <li class="nav-item" sec:authorize="isAnonymous()">
+                        <a class="btn btn-outline-primary btn-sm px-3" th:href="@{/login}">Log In</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAnonymous()">
+                        <a class="btn btn-primary btn-sm px-3" th:href="@{/register}">Sign Up Free</a>
+                    </li>
+
+                    <!-- Authenticated Users -->
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle fs-5 text-primary"></i>
+                            <span sec:authentication="name">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" th:href="@{/dashboard}"><i class="bi bi-grid me-2"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" th:href="@{/resumes/upload}"><i class="bi bi-cloud-arrow-up me-2"></i> Upload Resume</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="px-2">
+                                    <button type="submit" class="dropdown-item text-danger rounded">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Log Out
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Reusable Flash Notification Alerts Fragment -->
+    <div th:fragment="alerts" class="container mt-3" th:if="${successMessage != null or errorMessage != null or infoMessage != null}">
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert" th:if="${successMessage}">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert" th:if="${errorMessage}">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="alert alert-info alert-dismissible fade show d-flex align-items-center" role="alert" th:if="${infoMessage}">
+            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+            <span th:text="${infoMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <!-- Reusable Footer Fragment -->
+    <footer th:fragment="footer">
+        <div class="container">
+            <div class="row gy-4 align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <h5 class="text-white fw-bold mb-1"><i class="bi bi-briefcase-fill text-primary"></i> HireSense AI</h5>
+                    <p class="small text-secondary mb-0">Empowering student and engineer career journeys with explainable resume analytics and skill-based matching.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                        <i class="bi bi-shield-check text-success me-1"></i> Spring Boot 3 & PostgreSQL Protected
+                    </span>
+                    <p class="small text-secondary mt-2 mb-0">Disclaimer: ATS calculations are advisory estimates to guide resume optimization, not a guarantee of employer hiring outcomes.</p>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    </footer>
+
+</body>
+</html>

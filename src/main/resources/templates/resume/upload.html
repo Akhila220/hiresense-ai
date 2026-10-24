@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head th:replace="~{layout/base :: head('Upload Resume')}"></head>
+<body>
+
+    <div th:replace="~{layout/base :: navbar}"></div>
+    <div th:replace="~{layout/base :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+
+                    <div class="card p-4 p-md-5 border-0 shadow-sm">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-2">
+                                <i class="bi bi-cloud-arrow-up-fill fs-2"></i>
+                            </div>
+                            <h3 class="fw-bold">Upload Your Resume</h3>
+                            <p class="text-muted small">Upload your resume in PDF or DOCX format for deep ATS parsing and role matching.</p>
+                        </div>
+
+                        <form th:action="@{/resumes/upload}" method="post" enctype="multipart/form-data" id="uploadForm">
+                            <!-- File Upload Dropzone -->
+                            <div class="upload-dropzone mb-4" onclick="document.getElementById('fileInput').click();">
+                                <i class="bi bi-file-earmark-arrow-up text-primary fs-1 d-block mb-2"></i>
+                                <h5 class="fw-bold mb-1">Click to browse or drop your resume here</h5>
+                                <p class="text-muted small mb-2">Supports standard text-selectable PDF and DOCX files (up to 10MB)</p>
+                                <span class="badge bg-light text-dark border px-3 py-2" id="fileNameDisplay">No file selected</span>
+                                <input type="file" id="fileInput" name="file" accept=".pdf,.docx" class="d-none" required onchange="handleFileSelect(this)">
+                            </div>
+
+                            <!-- Optional AI Checkbox -->
+                            <div class="card bg-light border-0 p-3 mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="enableAi" id="enableAiCheckbox" value="true">
+                                    <label class="form-check-label fw-semibold small" for="enableAiCheckbox">
+                                        <i class="bi bi-stars text-primary me-1"></i> Enable Optional Gemini AI Executive Feedback
+                                    </label>
+                                    <span class="badge bg-success-subtle text-success ms-2 small" th:if="${isAiConfigured}">API Key Configured</span>
+                                    <span class="badge bg-secondary-subtle text-muted ms-2 small" th:if="${!isAiConfigured}">Deterministic Fallback Ready</span>
+                                    <div class="text-muted small mt-1">
+                                        HireSense AI always computes rigorous deterministic ATS and skill matching. If checked and <code>GEMINI_API_KEY</code> is present in your environment, high-level executive advisory suggestions will be synthesized.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold fs-5 shadow-sm" id="submitBtn">
+                                <i class="bi bi-cpu me-2"></i> Parse & Analyze Resume
+                            </button>
+                        </form>
+
+                        <!-- Helpful Guidelines -->
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-info-circle text-primary me-1"></i> Best Practices for ATS Compatibility:</h6>
+                            <ul class="text-muted small ps-3 mb-0">
+                                <li>Ensure your PDF has selectable text (avoid image-only flat scans).</li>
+                                <li>Use standard headings such as <strong>Work Experience</strong>, <strong>Education</strong>, <strong>Technical Skills</strong>, and <strong>Projects</strong>.</li>
+                                <li>Include quantified metrics in bullet points (e.g. <em>"improved latency by 30%"</em>).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{layout/base :: footer}"></div>
+
+    <script>
+        function handleFileSelect(input) {
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files.length > 0) {
+                display.innerText = input.files[0].name + " (" + Math.round(input.files[0].size / 1024) + " KB)";
+                display.className = "badge bg-primary text-white px-3 py-2";
+            }
+        }
+    </script>
+</body>
+</html>

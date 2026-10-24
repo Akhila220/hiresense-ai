@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head th:replace="~{layout/base :: head('Match Engine')}"></head>
+<body>
+
+    <div th:replace="~{layout/base :: navbar}"></div>
+    <div th:replace="~{layout/base :: alerts}"></div>
+
+    <main class="py-4">
+        <div class="container">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Role Compatibility Matrix</h2>
+                    <p class="text-muted small mb-0">
+                        Matches calculated against your latest active resume (Score: <strong th:text="${analysis.overallAtsScore} + '/100'">80/100</strong>).
+                    </p>
+                </div>
+                <a th:href="@{/resumes/upload}" class="btn btn-outline-primary">
+                    <i class="bi bi-cloud-arrow-up me-1"></i> Upload New Version
+                </a>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12" th:each="m : ${matches}">
+                    <div class="card p-4 border-0 shadow-sm card-hover bg-white">
+                        <div class="row align-items-center gy-3">
+                            <!-- Score Column -->
+                            <div class="col-md-2 text-center border-end-md">
+                                <div class="score-circle mb-1" style="width: 80px; height: 80px;"
+                                     th:classappend="${m.matchPercentage >= 75 ? 'score-excellent' : (m.matchPercentage >= 55 ? 'score-good' : 'score-fair')}">
+                                    <span class="fs-3 lh-1" th:text="${m.matchPercentage + '%'}">85%</span>
+                                </div>
+                                <small class="text-muted fw-semibold">Match Score</small>
+                            </div>
+
+                            <!-- Details Column -->
+                            <div class="col-md-7">
+                                <h5 class="fw-bold mb-1">
+                                    <a th:href="@{'/jobs/' + ${m.job.id}}" class="text-dark text-decoration-none" th:text="${m.job.title}">Senior Developer</a>
+                                </h5>
+                                <div class="small text-muted mb-2">
+                                    <span class="fw-semibold text-dark" th:text="${m.job.company}">Company</span> &bull;
+                                    <span th:text="${m.job.location}">Location</span> &bull;
+                                    <span class="badge bg-light text-dark border ms-1" th:text="${m.job.employmentType}">Type</span>
+                                    <span class="badge bg-light text-dark border ms-1" th:text="${m.job.experienceLevel}">Level</span>
+                                </div>
+
+                                <!-- Matched Skills -->
+                                <div class="small mb-1">
+                                    <strong class="text-success"><i class="bi bi-check2 me-1"></i> Matched:</strong>
+                                    <span class="badge-skill badge-matched" th:each="ms : ${m.matchedSkills}" th:text="${ms}">Skill</span>
+                                    <span class="text-muted fst-italic" th:if="${m.matchedSkills.isEmpty()}">No exact keyword match</span>
+                                </div>
+
+                                <!-- Missing Skills -->
+                                <div class="small" th:if="${!m.missingSkills.isEmpty()}">
+                                    <strong class="text-warning"><i class="bi bi-dash me-1"></i> Gaps to Address:</strong>
+                                    <span class="badge-skill badge-missing" th:each="mis : ${m.missingSkills}" th:text="${mis}">Missing Skill</span>
+                                </div>
+                            </div>
+
+                            <!-- Action Column -->
+                            <div class="col-md-3 text-md-end">
+                                <div class="d-flex flex-column gap-2">
+                                    <a th:href="@{'/jobs/' + ${m.job.id}}" class="btn btn-primary btn-sm">
+                                        View Full Details <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                    <form th:action="@{'/jobs/' + ${m.job.id} + '/save'}" method="post">
+                                        <button type="submit" class="btn btn-sm w-100"
+                                                th:classappend="${m.saved} ? 'btn-success' : 'btn-outline-secondary'">
+                                            <i class="bi" th:classappend="${m.saved} ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'"></i>
+                                            <span th:text="${m.saved} ? 'Saved' : 'Bookmark Job'">Bookmark</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{layout/base :: footer}"></div>
+</body>
+</html>
